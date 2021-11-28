@@ -1,27 +1,18 @@
 {
   "name": "node-red-contrib-ical-schedule",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Node-RED nodes for working with iCal files. Currently only parses and writes events.",
-  "main": "index.js",
-  "scripts": {
-    "start": "node-red",
-    "test": "mocha \"test/**/*_spec.js\"",
-    "release": "standard-version  --release-as minor",
-    "release-bugfix": "standard-version",
-    "watch": "tsc -w -p ./tsconfig.json",
-    "dev": "gulp develop",
-    "build": "gulp",
-    "beta": "gulp && standard-version  -r major --prerelease beta"
+  "author": "yuanng",
+  "engines": {
+    "node": ">=10.0.0"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/cynsyng/node-red-contrib-ical-schedule.git"
+  "standard-version": {
+    "scripts": {}
   },
   "keywords": [
     "node-red",
     "ical-schedule"
   ],
-  "author": "yuanng",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/cynsyng/node-red-contrib-ical-schedule/issues"
@@ -34,6 +25,20 @@
       "ical-sensor": "dist/ical-sensor.js",
       "ical-upcoming": "dist/ical-upcoming.js"
     }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cynsyng/node-red-contrib-ical-schedule.git"
+  },
+  "scripts": {
+    "start": "node-red",
+    "test": "mocha \"test/**/*_spec.js\"",
+    "release": "standard-version  --release-as minor",
+    "release-bugfix": "standard-version",
+    "watch": "tsc -w -p ./tsconfig.json",
+    "dev": "gulp develop",
+    "build": "gulp",
+    "beta": "gulp && standard-version  -r major --prerelease beta"
   },
   "dependencies": {
     "@naimo84/dav": "^1.9.0",
@@ -151,6 +156,11 @@
           "test"
         ]
       ]
+    }
+  },
+  "husky": {
+    "hooks": {
+      "commit-msg": "commitlint --edit"
     }
   }
 }
