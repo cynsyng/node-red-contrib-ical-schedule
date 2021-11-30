@@ -85,25 +85,22 @@ module.exports = function (RED: any) {
         else {
             node.status({});
         }
-        let dateNow = new Date();
+        let dateNow = moment().utc().toDate();
         let possibleUids = [];
         getICal(node).then((data: ICalendarEvent[]) => {
             node.debug('Ical read successfully ' + node.config.url);
             if (data) {
-                console.log('data - count b4 looping from getIcal - ', data.length);
-                console.log('Loooping after getting return from getICal - 50 entry per schedule!');
                 for (let k in data) {
                     if (data.hasOwnProperty(k)) {
                         let ev = data[k];
-                        
-                        console.log('loop - timecheck - eventStart', ev.eventStart);
-                        console.log('loop - timecheck - eventEnd', ev.eventEnd);
-                        console.log('loop - timecheck - dateNow', dateNow);
+
+                        const evStart = moment(ev.eventStart).utc().toDate();
+                        const evEnd = moment(ev.eventEnd).utc().toDate();
 
                         if (ev.eventStart > dateNow) {
                             let uid = crypto.MD5(ev.uid + ev.summary + "start").toString();
                             if (ev.uid) {
-                                uid = (ev.uid.uid ? ev.uid.uid : ev.uid) + ev.eventStart.toISOString() + "start";
+                                uid = (ev.uid.uid ? ev.uid.uid : ev.uid) + evStart.toISOString() + "start";
                             }
                             possibleUids.push(uid);
                             let event: CalEvent = Object.assign(ev, {
@@ -112,7 +109,7 @@ module.exports = function (RED: any) {
                                 calendarName: ev.calendarName || node.config.name
                             });
 
-                            let job2 = new CronJob(moment(ev.eventStart).utc(), cronJobStart.bind(null, event, send, done, msg));
+                            let job2 = new CronJob(moment(evStart).utc(), cronJobStart.bind(null, event, send, done, msg));
                             let cronJob = startedCronJobs[uid];
                             if (cronJob) {
                                 cronJob.stop();
@@ -123,7 +120,7 @@ module.exports = function (RED: any) {
                         if (ev.eventEnd > dateNow) {
                             let uid = crypto.MD5(ev.uid + ev.summary + "end").toString();
                             if (ev.uid) {
-                                uid = (ev.uid.uid ? ev.uid.uid : ev.uid) + ev.eventEnd.toISOString() + "end";
+                                uid = (ev.uid.uid ? ev.uid.uid : ev.uid) + evEnd.toISOString() + "end";
                             }
                             possibleUids.push(uid);
                             let event: CalEvent = Object.assign(ev, {
@@ -132,7 +129,7 @@ module.exports = function (RED: any) {
                                 calendarName: ev.calendarName || node.config.name
                             });
 
-                            let job2 = new CronJob(moment(ev.eventEnd).utc(), cronJobEnd.bind(null, event, send, done, msg));
+                            let job2 = new CronJob(moment(evEnd).utc(), cronJobEnd.bind(null, event, send, done, msg));
                             let cronJob = startedCronJobs[uid];
                             if (cronJob) {
                                 cronJob.stop();
@@ -141,7 +138,7 @@ module.exports = function (RED: any) {
                         }
                     }
                 }
-
+                
                 if (newCronJobs) {
                     let triggerDate: Date[] = [];
 
@@ -166,7 +163,6 @@ module.exports = function (RED: any) {
                     if (triggerDate.length > 0)
                         node.status({ text: `next trigger: ${triggerDate[0].toLocaleString()}`, fill: "green", shape: "dot" })
                 }
-
                 newCronJobs.clear();
             }
 

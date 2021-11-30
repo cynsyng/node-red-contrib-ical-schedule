@@ -5,6 +5,7 @@ import * as NodeCache from 'node-cache';
 import { CalendarEvents } from './extends/lib';
 import { ICalendarEvent } from './model/event';
 import { DateTime } from "luxon";
+import moment = require("moment");
 
 export interface Job {
     id: string,
@@ -82,7 +83,7 @@ function extendEvent(event: ICalendarEvent, config: IcalEventsConfig, kalenderEv
         //@ts-ignore
         event.eventEnd = DateTime.fromJSDate(new Date(event.eventEnd)).setZone(config.timezone).toString();
     }
-    event.countdown = kalenderEvents.countdown(new Date(event.eventStart));
+    event.countdown = kalenderEvents.countdown(moment(event.eventStart).utc().toDate());
     if (!event.calendarName) event.calendarName = config.name;
     return event;
 }
@@ -98,9 +99,13 @@ export async function getICal(node: IcalNode) {
     try {
         if (configs.length === 1) {
             let icalConfig = node.config;
+
             if ((new Date(node.msg.payload)).getTime() > 1) {
-                icalConfig = Object.assign(icalConfig, { now: new Date(node.msg.payload) })
+                icalConfig = Object.assign(icalConfig, { now: moment(node.msg.payload).utc().toDate() })
             }
+
+            icalConfig = Object.assign(icalConfig, { now: moment(node.msg.payload).utc().toDate() })
+
             let data = await calendarEvents.getEvents(icalConfig);
             for (let d in data) {
                 datas.push(extendEvent(data[d], icalConfig, calendarEvents));

@@ -387,12 +387,7 @@ public processRRule(ev: ICalendarEvent, preview: Date, pastview: Date, now: Date
     var eventLength = ev.eventEnd.getTime() - ev.eventStart.getTime();
 
     var options = RRule.parseString(ev.rrule.toString());
-    // options.dtstart = this.addOffset(ev.eventStart, -this.getTimezoneOffset(ev.eventStart));
-    // if (options.until) {
-    //     options.until = this.addOffset(options.until, -this.getTimezoneOffset(options.until));
-    // }
-
-    options.count = 10;
+    options.count = 50;
 
     const now2 = moment(now).utc().toDate();
     const diff = moment().utc().add(options.interval, 'minute').toDate();
@@ -411,9 +406,6 @@ public processRRule(ev: ICalendarEvent, preview: Date, pastview: Date, now: Date
     
     var dates = [];    
     try {
-        // dates = rule.between(now2, preview, true);
-        // console.log('dates', dates);
-
         let tempDate;
         let daysInWeek = [];
         rule.options.byweekday.forEach(res => {
@@ -425,30 +417,23 @@ public processRRule(ev: ICalendarEvent, preview: Date, pastview: Date, now: Date
         for (let i = 0; i <= rule.options.count; i++) {
             const newDate = moment(tempDate).utc();
             let temp = moment(tempDate).utc();
+
+            const cal = temp.minutes();
+            const diff2 = cal / options.interval;
+            const final = Math.floor(diff2) * options.interval;
+            
+            temp = moment(temp).minutes(final);
+            
             let now = newDate.toDate();
             let first = newDate.hours(hoursInDay[0]).minutes(0).seconds(0).milliseconds(0).toDate();
             let last = newDate.hours(hoursInDay[hoursInDay.length - 1]).minutes(0).seconds(0).milliseconds(0).toDate();
-            
-            // console.log('now', now);
-            // console.log('temp', temp);
-            // console.log('first', first);
-            // console.log('last', last);
-            // console.log('newDate', newDate);
-            // console.log('untilDate', untilDate);
-            // console.log('hoursInDay[0]', hoursInDay[0]);
-            // console.log('hoursInDay[hoursInDay.length - 1]', hoursInDay[hoursInDay.length - 1]);
-            // console.log('ev.eventStart', ev.eventStart);
-            // console.log('ev.eventEnd', ev.eventEnd);
-            // console.log('hoursInDay', hoursInDay);
-            // console.log('daysInWeek', daysInWeek);
-            // console.log('pastview', pastview);
 
             const isItMatchWeekday = temp.isoWeekday();
             
             if (now <= untilDate) {
                 if (daysInWeek.includes(isItMatchWeekday)) {
                     if (first <= now && now <= last) {
-                        tempDate = temp.add(rule.options.interval, 'minutes').toDate();
+                        tempDate = temp.add(rule.options.interval, 'minutes').seconds(0).milliseconds(0).toDate();
                         if (first <= tempDate && tempDate <= last && tempDate <= untilDate) {
                             dates.push(tempDate);
                         }
@@ -464,39 +449,21 @@ public processRRule(ev: ICalendarEvent, preview: Date, pastview: Date, now: Date
                 }
             }
         }
-        // console.log('dates', dates);
     } catch (e) {
-        throw (
-            'Issue detected in RRule, event ignored; ' +
-            e.stack +
-            '\n' +
-            'RRule object: ' +
-            JSON.stringify(rule) +
-            '\n' +
-            'now2: ' +
-            now2 +
-            '\n' +
-            'preview: ' +
-            preview +
-            '\n' +
-            'string: ' +
-            ev.rrule.toString() +
-            '\n' +
-            'options: ' +
-            JSON.stringify(options)
-        );
+        throw ('Issue detected in Recurrences, event ignored; ' + e.stack);
     }
     let reslist = [];
     if (dates.length > 0) {
         for (var i = 0; i < dates.length; i++) {
-            var ev2: ICalendarEvent = ce.clone(ev);
-            var start = dates[i];
-            ev2.eventStart = this.addOffset(start, this.getTimezoneOffset(start));
+            let ev2: ICalendarEvent = ce.clone(ev);
 
-            var end = new Date(start.getTime() + eventLength);
-            ev2.eventEnd = this.addOffset(end, this.getTimezoneOffset(end));
+            let start = dates[i];
+            ev2.eventStart = start;
 
-            var checkDate = true;
+            let end = moment(ev2.eventStart).utc().seconds(1).toDate();
+            ev2.eventEnd = end;
+
+            let checkDate = true;
 
             if (checkDate) {
                 let date = this.formatDate(ev2.eventStart, ev2.eventEnd, true, true);
@@ -621,8 +588,8 @@ public checkDates(ev: ICalendarEvent, preview: Date, pastview: Date, realnow: Da
 
     if (!ev.eventStart) return;
     if (!ev.eventEnd) ev.eventEnd = ev.eventStart;
-    ev.eventStart = new Date(ev.eventStart);
-    ev.eventEnd = new Date(ev.eventEnd);
+    ev.eventStart = moment(ev.eventStart).utc().toDate();
+    ev.eventEnd = moment(ev.eventEnd).utc().toDate();
     if (
         !ev.eventStart.getHours() &&
         !ev.eventStart.getMinutes() &&
@@ -632,7 +599,8 @@ public checkDates(ev: ICalendarEvent, preview: Date, pastview: Date, realnow: Da
         !ev.eventEnd.getSeconds()
     ) {
         if (ev.eventEnd.getTime() == ev.eventStart.getTime() && ev.datetype == 'date') {
-            ev.eventEnd.setDate(ev.eventEnd.getDate() + 1);
+            ev.eventEnd = moment(ev.eventEnd).utc().add(1, 'days').toDate();
+            // ev.eventEnd.setDate(ev.eventEnd.getDate() + 1);
         }
         if (ev.eventEnd.getTime() !== ev.eventStart.getTime()) {
             fullday = true;
@@ -645,7 +613,7 @@ public checkDates(ev: ICalendarEvent, preview: Date, pastview: Date, realnow: Da
         delete ev.recurrences;
         delete ev.exdate;
         //delete ev.rrule;
-        if (fullday) {
+        if (fullday) {            
             if (
                 (ev.eventStart < preview && ev.eventStart >= pastview) ||
                 (ev.eventEnd > pastview && ev.eventEnd <= preview) ||
