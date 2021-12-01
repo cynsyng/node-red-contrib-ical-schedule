@@ -192,7 +192,7 @@ module.exports = function (RED: any) {
         let msg2 = RED.util.cloneMessage(msg);
         delete msg2._msgid;
         delete event.id; 
-        event.lastRunTime = event.eventEnd;
+        event.lastRunTime = event.eventStart;
         event.nextRunTime = moment(event.eventStart).utc().add(event.rrule.options.interval, 'minutes').toDate();
         send([Object.assign(msg2, {
             payload: event
@@ -206,7 +206,7 @@ module.exports = function (RED: any) {
         let msg2 = RED.util.cloneMessage(msg);
         delete msg2._msgid;
         delete event.id;
-        event.lastRunTime = event.eventEnd;
+        event.lastRunTime = event.eventStart;
         event.nextRunTime = moment(event.eventStart).utc().add(event.rrule.options.interval, 'minutes').toDate();
         send([null, Object.assign(msg2, {
             payload: event

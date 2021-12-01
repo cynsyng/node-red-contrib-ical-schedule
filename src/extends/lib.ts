@@ -184,8 +184,6 @@ public convertEvent(event: iCalEvent): ICalendarEvent {
             uid.date = startDate.getTime().toString()
         }
 
-
-
         let duration = event.duration;
         let allday = false;
         if (!duration) {
@@ -201,6 +199,15 @@ public convertEvent(event: iCalEvent): ICalendarEvent {
             }
         }
         let date = this.formatDate(startDate, endDate, true, allday);
+
+        const pipelineUUid = event['SAE-PIPELINE-UID'];
+        const pipelineUUidpt1 = pipelineUUid.substring(0, 8);
+        const pipelineUUidpt2 = pipelineUUid.substring(8, 12);
+        const pipelineUUidpt3 = pipelineUUid.substring(12, 16);
+        const pipelineUUidpt4 = pipelineUUid.substring(16, 20);
+        const pipelineUUidpt5 = pipelineUUid.substring(20, 32);
+
+        const concatenateUUid = pipelineUUidpt1 + '-' + pipelineUUidpt2 + '-' + pipelineUUidpt3 + '-' + pipelineUUidpt4 + '-' + pipelineUUidpt5;
 
         let returnEvent: ICalendarEvent = {
             date: date.text.trim(),
@@ -223,8 +230,11 @@ public convertEvent(event: iCalEvent): ICalendarEvent {
             exdate: event.exdate,
             recurrences: event.recurrences,
             categories: event.categories,
-            alarms: []
+            alarms: [],
+            pipelineUid: concatenateUUid,
+            scheduleUid: event.uid
         }
+
         const makeProperty = (k, v) => {
             const tmpObj = {};
             tmpObj[k] = v;
