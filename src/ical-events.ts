@@ -109,6 +109,8 @@ module.exports = function (RED: any) {
                                 calendarName: ev.calendarName || node.config.name
                             });
 
+                            // console.log('cronJobStart - event - ', event);
+
                             let job2 = new CronJob(moment(evStart).utc(), cronJobStart.bind(null, event, send, done, msg));
                             let cronJob = startedCronJobs[uid];
                             if (cronJob) {
@@ -128,6 +130,8 @@ module.exports = function (RED: any) {
                                 id: uid,
                                 calendarName: ev.calendarName || node.config.name
                             });
+
+                            // console.log('cronJobEnd - event - ', event);
 
                             let job2 = new CronJob(moment(evEnd).utc(), cronJobEnd.bind(null, event, send, done, msg));
                             let cronJob = startedCronJobs[uid];
@@ -194,6 +198,7 @@ module.exports = function (RED: any) {
         delete event.id; 
         event.lastRunTime = event.eventStart;
         event.nextRunTime = moment(event.eventStart).utc().add(event.rrule.options.interval, 'minutes').toDate();
+        // console.log('cronJobStart - ', event);
         send([Object.assign(msg2, {
             payload: event
         })]);
@@ -208,6 +213,7 @@ module.exports = function (RED: any) {
         delete event.id;
         event.lastRunTime = event.eventStart;
         event.nextRunTime = moment(event.eventStart).utc().add(event.rrule.options.interval, 'minutes').toDate();
+        // console.log('cronJobEnd - ', event);
         send([null, Object.assign(msg2, {
             payload: event
         })]);
