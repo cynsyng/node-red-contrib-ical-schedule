@@ -101,7 +101,7 @@ export class CalendarEvents {
             realnow = preview = pastview = config.now;
         }
 
-        preview = moment(preview).utc().endOf('day').add(this.config.preview, this.config.previewUnits.charAt(0)).toDate();
+        preview = moment(preview).utc().endOf('day').add(this.config.preview, this.config.previewUnits.charAt(0)).toDate();        
         pastview = moment(pastview).utc().startOf('day').subtract(this.config.pastview, this.config.pastviewUnits.charAt(0)).toDate();
         let processedData = this.processData(data, realnow, pastview, preview);  
 
@@ -223,7 +223,8 @@ public convertEvent(event: iCalEvent): ICalendarEvent {
             categories: event.categories,
             alarms: [],
             pipelineUid: event['SAE-PIPELINE-UID'],
-            scheduleUid: event.uid
+            scheduleUid: event.uid,
+            timezone: event.rrule.options.tzid
         }
 
         const makeProperty = (k, v) => {

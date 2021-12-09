@@ -8,6 +8,18 @@ import * as NodeCache from 'node-cache';
 import { ICalendarEvent } from './model/event';
 import { NodeMessageInFlow, NodeMessage } from "node-red";
 import moment = require("moment");
+import timezone = require("moment-timezone");
+
+// import dayjs = require("dayjs");
+// import utc = require('dayjs/plugin/utc');
+// import timezone = require('dayjs/plugin/timezone');
+
+// let dayOb = dayjs;
+// dayOb.extend(utc);
+// dayOb.extend(timezone);
+
+let momentOb = timezone;
+
 module.exports = function (RED: any) {
 
     function eventsNode(config: any) {
@@ -164,8 +176,10 @@ module.exports = function (RED: any) {
                         return new Date(a).valueOf() - new Date(b).valueOf();
                     });
 
-                    if (triggerDate.length > 0)
-                        node.status({ text: `next trigger: ${triggerDate[0].toLocaleString()}`, fill: "green", shape: "dot" })
+                    if (triggerDate.length > 0) {
+                        let next = moment(triggerDate[0]).toLocaleString();
+                        node.status({ text: `next trigger: ${next}`, fill: "green", shape: "dot" })
+                    }
                 }
                 newCronJobs.clear();
             }
@@ -196,8 +210,10 @@ module.exports = function (RED: any) {
         let msg2 = RED.util.cloneMessage(msg);
         delete msg2._msgid;
         delete event.id; 
-        event.lastRunTime = event.eventStart;
-        event.nextRunTime = moment(event.eventStart).utc().add(event.rrule.options.interval, 'minutes').toDate();
+        event.lastRunTime = momentOb.utc(event.eventStart).tz(event.timezone).format('YYYY-MM-DD[T]HH:mm:ss.SSS[Z]');
+        event.nextRunTime = momentOb.utc(moment(event.eventStart).add(event.rrule.options.interval, 'minutes').toDate()).tz(event.timezone).format('YYYY-MM-DD[T]HH:mm:ss.SSS[Z]');
+        // event.lastRunTime = new Date(moment(event.eventStart).toDate()).toISOString();
+        // event.nextRunTime = new Date(moment(event.eventStart).add(event.rrule.options.interval, 'minutes').toDate()).toISOString();
         // console.log('cronJobStart - ', event);
         send([Object.assign(msg2, {
             payload: event
@@ -211,8 +227,10 @@ module.exports = function (RED: any) {
         let msg2 = RED.util.cloneMessage(msg);
         delete msg2._msgid;
         delete event.id;
-        event.lastRunTime = event.eventStart;
-        event.nextRunTime = moment(event.eventStart).utc().add(event.rrule.options.interval, 'minutes').toDate();
+        event.lastRunTime = momentOb.utc(event.eventStart).tz(event.timezone).format('YYYY-MM-DD[T]HH:mm:ss.SSS[Z]');
+        event.nextRunTime = momentOb.utc(moment(event.eventStart).add(event.rrule.options.interval, 'minutes').toDate()).tz(event.timezone).format('YYYY-MM-DD[T]HH:mm:ss.SSS[Z]');
+        // event.lastRunTime = new Date(moment(event.eventStart).toDate()).toISOString();
+        // event.nextRunTime = new Date(moment(event.eventStart).add(event.rrule.options.interval, 'minutes').toDate()).toISOString();
         // console.log('cronJobEnd - ', event);
         send([null, Object.assign(msg2, {
             payload: event

@@ -58,7 +58,8 @@ export interface iCalEvent {
     categories?: string[],
     alarms?: ICalendarAlarm[],
     pipelineUid?: string,
-    scheduleUid?: string
+    scheduleUid?: string,
+    timezone?: string
   }
   
   export interface ICalendarAlarm {
